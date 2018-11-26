@@ -14,10 +14,10 @@ class DicTreeNode
 		off_t isMatchKeyword(char *, off_t);
 
 	private:
-		bool isEnd;
+		bool isEnd; // to avoid "ABC" and "ABCD.." case
 		char value;
 		unsigned int length;
-		std::unordered_map < char, class DicTreeNode * > map;
+		std::unordered_map < char, class DicTreeNode * > map; // use unorder map as tree
 		std::vector< class DicTreeNode * > childNodes; // for deconstructor
 };
 
@@ -34,6 +34,7 @@ DicTreeNode::~DicTreeNode()
 	}
 }
 
+// To find the last common prefix node between keywords
 DicTreeNode* DicTreeNode::findLeaf(char *input, off_t &pos)
 {
 	DicTreeNode *result = this;
@@ -69,6 +70,7 @@ bool DicTreeNode::getEnd()
 	return isEnd;
 }
 
+//To find match keyword
 off_t DicTreeNode::isMatchKeyword(char *str, off_t maxLen)
 {
 	DicTreeNode *result = this;
