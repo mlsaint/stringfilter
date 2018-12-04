@@ -13,6 +13,8 @@ class DicTreeNode
 		bool getEnd();
 		off_t isMatchKeyword(char *, off_t);
 
+		static long search_count;
+
 	private:
 		bool isEnd; // to avoid "ABC" and "ABCD.." case
 		char value;
@@ -20,6 +22,9 @@ class DicTreeNode
 		std::unordered_map < char, class DicTreeNode * > map; // use unorder map as tree
 		std::vector< class DicTreeNode * > childNodes; // for deconstructor
 };
+
+long DicTreeNode::search_count = 0;
+
 
 DicTreeNode::DicTreeNode(char val, unsigned int len)
 {
@@ -75,17 +80,20 @@ off_t DicTreeNode::isMatchKeyword(char *str, off_t maxLen)
 {
 	DicTreeNode *result = this;
 	off_t ind = 0;
+	off_t retval = 0;
 	std::unordered_map< char, class DicTreeNode *>::iterator it;
 	
+	search_count++;
 	while ( ((it = result->map.find(str[ind])) !=  result->map.end()) && ind < maxLen) {
 		//std::cout << str[ind] << std::endl;
 		result = it->second;
 		ind++;
+		search_count++;
+		if (result->getEnd()) {
+			retval = ind;
+		}
 	}
-	if (result->getEnd()) {
-		return ind;
-	}
-	return 0;
+	return retval;
 }
 
 class StringFilter
@@ -157,12 +165,14 @@ int main()
 	StringFilter obj;
 	std::string input = "ABCDEFGHIJKLMNOPQRSTUVWXYZ, ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	obj.addKeyword("ABC");
-	obj.addKeyword("ABCD");
+	obj.addKeyword("ABCDEG");
 	obj.addKeyword("IJK");
 	obj.addKeyword("XYZ");
 
 	std::cout << input << std::endl;
 	obj.filter(input);
 	std::cout << input << std::endl;
+	std::cout << "search count: " << DicTreeNode::search_count << std::endl;
+
 	return 0;
 }
