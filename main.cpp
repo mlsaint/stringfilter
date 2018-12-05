@@ -319,6 +319,7 @@ int main()
 		//std::cout << input << std::endl;
 		obj.addKeyword(input);
 	}
+	obj.buildKMP();
 
 	while (std::getline(filter_file, input))
 	{
