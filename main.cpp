@@ -2,6 +2,8 @@
 #include <vector>
 #include <unordered_map>
 #include <fstream>
+#include <locale>
+#include <algorithm>
 
 class DicTreeNode
 {
@@ -174,8 +176,10 @@ void StringFilter::addKeyword(std::string newKeyword)
 	char *szBuf = new char[newKeyword.size() + 1];
 	off_t pos, len;
 	DicTreeNode *node, *child;
+	std::string temp = newKeyword;
 
-	snprintf(szBuf, newKeyword.size() + 1, "%s", newKeyword.c_str());
+	transform(temp.begin(), temp.end(), temp.begin(), toupper);
+	snprintf(szBuf, newKeyword.size() + 1, "%s", temp.c_str());
 	len = pos = newKeyword.length();
 	node = root->findLeaf(szBuf, pos);
 
@@ -196,6 +200,8 @@ void StringFilter::addKeyword(std::string newKeyword)
 void StringFilter::filter(std::string &strToBeReplace)
 {
 	char *target = new char[strToBeReplace.size() + 1];
+	char *res_buffer = new char[strToBeReplace.size() + 1];
+	std::string temp = strToBeReplace;
 	char *ptr = target;
 	char *out = NULL;
 	off_t ind = 0;
@@ -203,7 +209,9 @@ void StringFilter::filter(std::string &strToBeReplace)
 	off_t remain = maxlen;
 	class DicTreeNode *cur = root;
 
-	snprintf(target, strToBeReplace.size() + 1, "%s", strToBeReplace.c_str());
+	transform(temp.begin(), temp.end(), temp.begin(), toupper);
+	snprintf(target, temp.size() + 1, "%s", temp.c_str());
+	snprintf(res_buffer, strToBeReplace.size() + 1, "%s", strToBeReplace.c_str());
 	//std::cout << target << std::endl;
 
 	while(ind < maxlen) {
@@ -224,7 +232,7 @@ void StringFilter::filter(std::string &strToBeReplace)
 		if (next != NULL && next->getEnd()) {
 			//std::cout << "XXXX: found" << std::endl;
 			for (off_t i = 0; i <= next->length; i++) {
-				*(out - i - 1) = '*';
+				*(res_buffer + ((out - i - 1) - target)) = '*';
 			}
 			cur = root; // reset
 		} else if (next == NULL) {
@@ -237,8 +245,9 @@ void StringFilter::filter(std::string &strToBeReplace)
 		}
 		remain = maxlen - ind;
 	}
-	strToBeReplace = target;
+	strToBeReplace = res_buffer;
 	delete [] target;
+	delete [] res_buffer;
 }
 
 //#define UT
@@ -302,6 +311,7 @@ int main()
 #endif //UT
 
 	StringFilter obj;
+	std::string line;
 	std::string input;
 	std::ifstream keyword_file("./test/keywords");
 	std::ifstream filter_file("./test/11-0.txt");
@@ -314,17 +324,18 @@ int main()
 
 	stat << "input_length	search_count"<< std::endl;
 
-	while (std::getline(keyword_file, input))
+	while (std::getline(keyword_file, line))
 	{
-		//std::cout << input << std::endl;
-		obj.addKeyword(input);
+		obj.addKeyword(line);
 	}
 	obj.buildKMP();
 
-	while (std::getline(filter_file, input))
+	input.clear();
+	while (std::getline(filter_file, line))
 	{
-		if (input.size() == 0) {
-			result << input << std::endl;
+		input += line;
+		if (input.size() < 100) {
+			input += "\n";
 			continue;
 		}
 		DicTreeNode::search_count = 0;
@@ -333,6 +344,7 @@ int main()
 		std::cout << input << std::endl;
 		result << input << std::endl;
 		stat << input.size() << "	" << DicTreeNode::search_count << std::endl;
+		input.clear();
 	}
 
 
