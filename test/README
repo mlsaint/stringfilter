@@ -1,0 +1,8 @@
+Key list:
+    1. download http://www.gutenberg.org/cache/epub/29765/pg29765.txt
+    2. key word list: parse the all lines that has one word as keywords
+        ./parse.py > keywords
+
+Filter string 
+1. download http://www.gutenberg.org/files/11/11-0.txt
+2. 
