@@ -101,7 +101,6 @@ class DicTreeNode *DicTreeNode::isMatchKeyword(char *str, off_t maxLen, char * &
 	class DicTreeNode *retval = NULL;
 	std::unordered_map< char, class DicTreeNode *>::iterator it;
 	
-	out = str;
 	search_count++;
 	while ( ((it = result->map.find(str[ind])) !=  result->map.end()) && ind < maxLen) {
 		//std::cout << "GET: "<< str[ind] << std::endl;
@@ -168,6 +167,7 @@ void StringFilter::buildKMP()
 	while(DFS_nodesTravesal.size() != 0) {
 		class DicTreeNode *node = DFS_nodesTravesal.back();
 		DFS_nodesTravesal.pop_back();
+		//std::cout << "node [" << node->value << "], is end node " << boolToString(node->getEnd())  << std::endl;
 
 		std::unordered_map< char, class DicTreeNode *>::iterator it;
 		if ( (it = root->map.find(node->value)) != root->map.end() ) {
@@ -209,6 +209,7 @@ void StringFilter::addKeyword(std::string newKeyword)
 	}
 	
 	node->setEnd(true);
+	//std::cout << "node is " << node->value << std::endl;
 }
 
 void StringFilter::filter(std::string &strToBeReplace)
@@ -231,28 +232,38 @@ void StringFilter::filter(std::string &strToBeReplace)
 	//std::cout << target << std::endl;
 
 	while(ind < maxlen) {
-		class DicTreeNode *next = cur->isMatchKeyword(ptr, remain, out);
+		//std::cout << "-------------" << std::endl;
 		//std::cout << "ind: "  << ind << std::endl;
 		//std::cout << "remain: "  << remain << std::endl;
-		//std::cout << "XXXX: target = " << target << std::endl;
+		//if (cur != root) {
+		//	std::cout << "XXXX: cur = " << cur->value << std::endl;
+		//}
+		//std::cout << "XXXX: target = " << res_buffer << std::endl;
 		//std::cout << "XXXX: str = " << ptr << std::endl;
+		out = ptr;
+		class DicTreeNode *next = cur->isMatchKeyword(ptr, remain, out);
 		//std::cout << "XXXX: out = " << out << std::endl;
-		ind = out - target + 1;
-		ptr = out;
-		ptr++;
 		if (next != NULL && next->getEnd()) {
 			//std::cout << "XXXX: found" << std::endl;
 			for (off_t i = 0; i <= next->length; i++) {
 				*(res_buffer + ((out - i - 1) - target)) = '*';
 			}
 			cur = root; // reset
+			ind = out - target;
+			ptr = out;
 		} else if (next == NULL) {
 			//std::cout << "XXXX: IGNORE all char and start with next char" << std::endl;
+			ind = out - target;
+			ptr = out;
+			if (cur == root) {
+				ptr++;
+			}
 			cur = root;
 		} else { // keep searching
 			//std::cout << "XXXX: keep search" << std::endl;
-			ind = ind + next->length - cur->length;
+			ind = ind + next->length - cur->length + 1;
 			cur = next;
+			ptr = out;
 		}
 		remain = maxlen - ind;
 	}
@@ -265,6 +276,8 @@ void StringFilter::filter(std::string &strToBeReplace)
 #ifdef UT
 #define UT_CASE_1
 #define UT_CASE_2
+#define UT_CASE_3
+#define UT_CASE_4
 #endif
 
 int main()
@@ -289,10 +302,12 @@ int main()
 			std::cout << "Success" << std::endl;
 		} else {
 			std::cout << "Failed" << std::endl;
+			exit(0);
 		}
 		std::cout << "input length: " << input.size() << "; search count: " << DicTreeNode::search_count << std::endl;
 	}
 #endif //UT_CASE_1
+
 #ifdef UT_CASE_2
 	{
 		StringFilter obj2;
@@ -315,12 +330,61 @@ int main()
 			std::cout << "Success" << std::endl;
 		} else {
 			std::cout << "Failed" << std::endl;
+			exit(0);
 		}
 		std::cout << "input length: " << input.size() << "; search count: " << DicTreeNode::search_count << std::endl;
 	}
 #endif //UT_CASE_2
 
-#else
+#ifdef UT_CASE_3
+	{
+		StringFilter obj3;
+		std::string input = "ABCD";
+		std::string result = "A**D";
+		obj3.addKeyword("ABCZ");
+		obj3.addKeyword("BC");
+		obj3.buildKMP();
+
+		std::cout << "UT case 3" << std::endl;
+		std::cout << input << std::endl;
+		obj3.filter(input);
+		std::cout << input << std::endl;
+		std::cout << result << std::endl;
+		if (input == result) {
+			std::cout << "Success" << std::endl;
+		} else {
+			std::cout << "Failed" << std::endl;
+			exit(0);
+		}
+		std::cout << "input length: " << input.size() << "; search count: " << DicTreeNode::search_count << std::endl;
+	}
+#endif //UT_CASE_3
+
+#ifdef UT_CASE_4
+	{
+		StringFilter obj4;
+		std::string input = "ACACACACACAD";
+		std::string result = "************";
+		obj4.addKeyword("AC");
+		obj4.addKeyword("ACAD");
+		obj4.buildKMP();
+
+		std::cout << "UT case 4" << std::endl;
+		std::cout << input << std::endl;
+		obj4.filter(input);
+		std::cout << input << std::endl;
+		std::cout << result << std::endl;
+		if (input == result) {
+			std::cout << "Success" << std::endl;
+		} else {
+			std::cout << "Failed" << std::endl;
+			exit(0);
+		}
+		std::cout << "input length: " << input.size() << "; search count: " << DicTreeNode::search_count << std::endl;
+	}
+#endif //UT_CASE_4
+
+#else // UT
 	StringFilter obj;
 	std::string line;
 	std::string input;
